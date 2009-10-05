@@ -1,4 +1,4 @@
-= secure_url
+= SecureURI
 
 Description goes here.
 

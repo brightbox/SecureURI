@@ -4,11 +4,11 @@ require 'rake'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "secure_url"
+    gem.name = "secure_uri"
     gem.summary = %Q{TODO: one-line summary of your gem}
     gem.description = %Q{TODO: longer description of your gem}
     gem.email = "dev@caius.name"
-    gem.homepage = "http://github.com/caius/secure_url"
+    gem.homepage = "http://github.com/caius/secure_uri"
     gem.authors = ["Caius Durling"]
     gem.add_development_dependency "rspec"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
