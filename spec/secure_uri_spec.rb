@@ -2,6 +2,32 @@ require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
 describe "SecureURI" do
 
+  it "should work" do
+
+    url = URI.parse("http://caius.name/foo?bar=sed")
+
+    url.secure?.should == false
+    url.valid?.should == false
+
+    str = url.secure!
+
+    str.should =~ /hash/
+
+    url.secure?.should == true
+    url.valid?.should == true
+
+    url.query = (url.query + "&thing=nothing")
+
+    url.secure?.should == true
+    url.valid?.should == false
+
+    url.secure!
+
+    url.secure?.should == true
+    url.valid?.should == true
+
+  end
+
   before do
     @url = "http://example.com/path?query=string"
     @uri = URI.parse(@url)
@@ -9,6 +35,7 @@ describe "SecureURI" do
     @secure_url = "http://example.com/path?query=string&hash=ZOMG-HASH"
     @secure_uri = URI.parse(@secure_url)
 
+    SecureURI.salt = "my lovely salt"
   end
 
   it "should be a URI" do
@@ -16,9 +43,9 @@ describe "SecureURI" do
   end
 
   it "should turn into a secure url" do
-    @uri.should_receive(:hash_query).and_return("ZOMG-HASH")
+    @uri.query.should_not =~ /hash=/
     @uri.secure!
-    @uri.query.should =~ /hash=ZOMG-HASH/
+    @uri.query.should =~ /hash=/
   end
 
   it "should not be a secure url" do
@@ -32,49 +59,43 @@ describe "SecureURI" do
   it "should validate as a secure uri" do
     hash_obj = mock(BCrypt::Password)
     hash_obj.should_receive(:==).and_return(true)
-    @secure_uri.should_receive(:hash_query).and_return(hash_obj)
+    BCrypt::Password.should_receive(:new).and_return(hash_obj)
+
     @secure_uri.should be_valid
   end
 
   it "should fail validation as a secure url" do
-    @secure_uri.should_receive(:hash_query).and_return("NOT_HASH")
     @secure_uri.should_not be_valid
   end
 
   it "should update the hash if the query changes" do
     @secure_uri.query += "&foo=bar"
     @secure_uri.query.should =~ /foo=bar/
-    @secure_uri.query.should =~ /hash=ZOMG-HASH/
+    @secure_uri.query.should =~ /hash=/
+    old_hash = @secure_uri.send(:hash_string)
 
-    @secure_uri.should_receive(:hash_query).and_return("new-hash")
     @secure_uri.secure!
 
-    @secure_uri.query.should =~ /hash=new-hash/
-    @secure_uri.query.should_not =~ /hash=ZOMG-HASH/
+    @secure_uri.query.should =~ /hash=/
+    @secure_uri.send(:hash_string).should_not == old_hash
   end
 
-  describe "hash_query" do
+  it "should secure a url" do
+    @uri.query.should_not =~ /hash=/
+    @uri.secure!
 
-    it "should warn if a salt isn't set" do
-      pending "how do you test a warn()?"
-      self.should_receive(:warn).with("SecureURI doesn't have a salt set.").and_return(nil)
-      
-      @uri.__send__(:hash_query)
-    end
+    @uri.query.should =~ /hash=/
+    @uri.should be_secure
+    @uri.should be_valid
+  end
 
-    describe "with salt" do
-      before do
-        # Set our salt
-        SecureURI.salt = "my lovely salt"
-      end
+  it "should update a secure url" do
+    @secure_uri.query.should =~ /hash=/
+    q = @secure_uri.query.dup
 
-      it "should hash a query" do
-        BCrypt::Password.should_receive(:create).with("my lovely saltquery=string").and_return("the hash")
+    @secure_uri.secure!
 
-        hash = @uri.__send__(:hash_query)
-
-        hash.should == "the hash"
-      end
-    end
+    @secure_uri.query.should =~ /hash=/
+    q.should_not == @secure_uri.query
   end
 end

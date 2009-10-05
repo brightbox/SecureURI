@@ -1,6 +1,7 @@
 require "uri"
 
 begin
+  require "rubygems"
   require "bcrypt"
 rescue LoadError
   puts "You need to install the 'bcrypt' gem"
@@ -17,40 +18,41 @@ module SecureURI
   end
 
   def secure?
-    !hash_param.nil?
+    !hash_string.nil?
   end
 
   def valid?
     return false unless secure?
-    hash_query == salted_query
+    mah_hash = BCrypt::Password.new(hash_string) rescue nil
+    mah_hash == salt + url_minus_hash
   end
 
   def secure!
-    # Clear it out if it's already got a hash
-    self.query[HASH_REGEX] = "" if secure?
-    # Make sure to URLEscape the hash
-    hash = URI.escape(hash_query, Regexp.new("([^#{URI::PATTERN::UNRESERVED}]|\\.)"))
-    # Update query
-    self.query = "#{query}&hash=#{hash}"
-    # And return the entire updated url
+    self.query = (self.query_minus_hash + "&hash=#{url_hash}")
     to_s
   end
 
 protected
 
-  def hash_param
-    return unless query
-    return unless q = (query[HASH_REGEX, 1] || query[HASH_REGEX, 2])
-    URI.unescape(q)
+  def salt
+    warn("SecureURI.salt not set") unless @@salt
+    @@salt.to_s
   end
 
-  def salted_query
-    @@salt.to_s + query.to_s
+  def hash_string
+    query.to_s.scan(HASH_REGEX).flatten.compact.first
   end
 
-  def hash_query
-    warn("SecureURI doesn't have a salt set.") if !@@salt || @@salt.empty?
-    BCrypt::Password.create(salted_query)
+  def url_hash
+    BCrypt::Password.create(salt + url_minus_hash)
+  end
+
+  def url_minus_hash
+    to_s.gsub(HASH_REGEX, "")
+  end
+
+  def query_minus_hash
+    query.to_s.gsub(HASH_REGEX, "")
   end
 
 end
