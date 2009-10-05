@@ -30,7 +30,9 @@ describe "SecureURI" do
   end
 
   it "should validate as a secure uri" do
-    @secure_uri.should_receive(:hash_query).and_return("ZOMG-HASH")
+    hash_obj = mock(BCrypt::Password)
+    hash_obj.should_receive(:==).and_return(true)
+    @secure_uri.should_receive(:hash_query).and_return(hash_obj)
     @secure_uri.should be_valid
   end
 
