@@ -5,10 +5,10 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "secure_uri"
-    gem.summary = %Q{TODO: one-line summary of your gem}
-    gem.description = %Q{TODO: longer description of your gem}
-    gem.email = "dev@caius.name"
-    gem.homepage = "http://github.com/caius/secure_uri"
+    gem.summary = %Q{Extends URI with secure urls}
+    gem.description = %Q{Adds methods to URI to let you compare a url to a hash of itself}
+    gem.email = "caius@brightbox.co.uk"
+    gem.homepage = "http://github.com/brightbox/secure_uri"
     gem.authors = ["Caius Durling"]
     gem.add_development_dependency "rspec"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
