@@ -10,7 +10,7 @@ end
 module SecureURI
 
   @@salt = nil
-  HASH_REGEX = /(?:&hash=([^&]+)$|hash=([^&]+)&)/
+  HASH_REGEX = /(?:&hash=([^&]+)$|hash=([^&]+)&?)/
 
   def self.salt= string
     @@salt = string
@@ -21,6 +21,7 @@ module SecureURI
   end
 
   def valid?
+    return false unless secure?
     hash_query == hash_param
   end
 
@@ -30,7 +31,7 @@ module SecureURI
     # Make sure to URLEscape the hash
     hash = URI.escape(hash_query, Regexp.new("([^#{URI::PATTERN::UNRESERVED}]|\\.)"))
     # Update query
-    self.query = "#{query}&hash=#{hash}"
+    self.query = "#{query}hash=#{hash}"
     # And return the entire updated url
     to_s
   end
@@ -38,14 +39,15 @@ module SecureURI
 protected
 
   def hash_param
-    query[HASH_REGEX, 1] || query[HASH_REGEX, 2]
+    return unless query
+    URI.unescape(query[HASH_REGEX, 1] || query[HASH_REGEX, 2])
   end
 
   def hash_query
     warn("SecureURI doesn't have a salt set.") if !@@salt || @@salt.empty?
-    BCrypt::Password.create((@@salt||"") + query)
+    BCrypt::Password.create(@@salt.to_s + query.to_s)
   end
 
 end
 
-URI::HTTP.__send__(:include, SecureURI)
+URI::Generic.__send__(:include, SecureURI)
