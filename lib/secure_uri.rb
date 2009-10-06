@@ -28,7 +28,8 @@ module SecureURI
   end
 
   def secure!
-    self.query = (self.query_minus_hash + "&hash=#{url_hash}")
+    hash = URI.escape(url_hash, Regexp.new("([^#{URI::PATTERN::UNRESERVED}]|\\.)"))
+    self.query = (self.query_minus_hash + "&hash=#{hash}")
     to_s
   end
 
@@ -40,7 +41,7 @@ protected
   end
 
   def hash_string
-    query.to_s.scan(HASH_REGEX).flatten.compact.first
+    URI.unescape(query.to_s.scan(HASH_REGEX).flatten.compact.first.to_s)
   end
 
   def url_hash
