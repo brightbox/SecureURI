@@ -18,7 +18,7 @@ module SecureURI
   end
 
   def secure?
-    !hash_string.nil?
+    !hash_string.empty?
   end
 
   def valid?
