@@ -98,4 +98,26 @@ describe "SecureURI" do
     @secure_uri.query.should =~ /hash=/
     q.should_not == @secure_uri.query
   end
+
+  describe "hasher" do
+
+    it "should use bcrypt by default" do
+      SecureURI.class_eval("@@hasher").should == "SecureURI::BCryptHasher"
+    end
+
+    it "should let you set your own hasher class" do
+      SecureURI.hasher = "FooBarSed"
+
+      SecureURI.class_eval("@@hasher").should == "FooBarSed"
+    end
+
+    describe "class" do
+      it "should set hasher when subclassed" do
+        class HasherSub < SecureURI::Hasher
+        end
+        
+        SecureURI.class_eval("@@hasher").should == "HasherSub"
+      end
+    end
+  end
 end
