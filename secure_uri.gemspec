@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{secure_uri}
-  s.version = "0.5.0"
+  s.version = "0.6.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Caius Durling"]
-  s.date = %q{2009-10-07}
+  s.date = %q{2009-12-03}
   s.description = %q{Adds methods to URI to let you compare a url to a hash of itself}
   s.email = %q{caius@brightbox.co.uk}
   s.extra_rdoc_files = [
@@ -24,12 +24,14 @@ Gem::Specification.new do |s|
      "Rakefile",
      "VERSION",
      "lib/secure_uri.rb",
-     "lib/secure_uri/bcrypt_hasher.rb",
      "lib/secure_uri/hasher.rb",
      "lib/secure_uri/secure_uri.rb",
      "lib/secure_uri/sha256_hasher.rb",
      "secure_uri.gemspec",
+     "spec/hasher_spec.rb",
      "spec/secure_uri_spec.rb",
+     "spec/sha256_hasher_spec.rb",
+     "spec/spec.opts",
      "spec/spec_helper.rb"
   ]
   s.homepage = %q{http://github.com/brightbox/secure_uri}
@@ -38,7 +40,9 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.5}
   s.summary = %q{Extends URI with secure urls}
   s.test_files = [
-    "spec/secure_uri_spec.rb",
+    "spec/hasher_spec.rb",
+     "spec/secure_uri_spec.rb",
+     "spec/sha256_hasher_spec.rb",
      "spec/spec_helper.rb"
   ]
 
