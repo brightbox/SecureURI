@@ -1,15 +1,27 @@
 module SecureURI
 
-  @@salt = nil
-  @@hasher = "SecureURI::BCryptHasher"
   HASH_REGEX = /(?:&hash=([^&]+)$|hash=([^&]+)&?)/
 
-  def self.salt= string
-    @@salt = string
-  end
+  class << self
+    def hasher
+      if @hasher[/::/]
+        arr = @hasher.split("::")
+        klass = Kernel
+        arr.each do |c|
+          klass = klass.const_get(c)
+        end
+        klass
+      else
+        Kernel.const_get(@hasher)
+      end
+    end
 
-  def self.hasher= class_name
-    @@hasher = class_name.to_s
+    def hasher= class_name
+      @hasher = class_name.to_s
+    end
+    protected :hasher=
+
+    @hasher ||= "SecureURI::Hasher"
   end
 
   def secure?
@@ -18,7 +30,7 @@ module SecureURI
 
   def valid?
     return false unless secure?
-    hasher.compare hash_string, (salt + url_minus_hash)
+    SecureURI.hasher.compare hash_string, url_minus_hash
   end
 
   def secure!
@@ -29,30 +41,12 @@ module SecureURI
 
 protected
 
-  def hasher
-    if @@hasher[/::/]
-      arr = @@hasher.split("::")
-      klass = Kernel
-      arr.each do |c|
-        klass = klass.const_get(c)
-      end
-      klass
-    else
-      Kernel.const_get(@@hasher)
-    end
-  end
-
-  def salt
-    warn("SecureURI.salt not set") unless @@salt
-    @@salt.to_s
-  end
-
   def hash_string
     URI.unescape(query.to_s.scan(HASH_REGEX).flatten.compact.first.to_s)
   end
 
   def url_hash
-    hasher.hash(salt + url_minus_hash)
+    SecureURI.hasher.hash url_minus_hash
   end
 
   def url_minus_hash

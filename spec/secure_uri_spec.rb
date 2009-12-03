@@ -25,7 +25,6 @@ describe "SecureURI" do
 
     url.secure?.should == true
     url.valid?.should == true
-
   end
 
   before do
@@ -35,7 +34,8 @@ describe "SecureURI" do
     @secure_url = "http://example.com/path?query=string&hash=ZOMG-HASH"
     @secure_uri = URI.parse(@secure_url)
 
-    SecureURI.salt = "my lovely salt"
+    # todo: change to set the salt for the SHA256Hasher
+    # SecureURI.salt = "my lovely salt"
   end
 
   it "should be a URI" do
@@ -57,10 +57,8 @@ describe "SecureURI" do
   end
 
   it "should validate as a secure uri" do
-    hash_obj = mock(BCrypt::Password)
-    hash_obj.should_receive(:==).and_return(true)
-    BCrypt::Password.should_receive(:new).and_return(hash_obj)
-
+    SecureURI::SHA256Hasher.should_receive(:compare).and_return(true)
+    
     @secure_uri.should be_valid
   end
 
@@ -100,23 +98,38 @@ describe "SecureURI" do
   end
 
   describe "hasher" do
-
-    it "should use bcrypt by default" do
-      SecureURI.class_eval("@@hasher").should == "SecureURI::BCryptHasher"
-    end
-
-    it "should let you set your own hasher class" do
-      SecureURI.hasher = "FooBarSed"
-
-      SecureURI.class_eval("@@hasher").should == "FooBarSed"
+    it "should use sha256 by default" do
+      SecureURI.hasher.should == SecureURI::SHA256Hasher
     end
 
     describe "class" do
-      it "should set hasher when subclassed" do
+      before(:all) do
+        @original_hasher = SecureURI.hasher
+
         class HasherSub < SecureURI::Hasher
         end
-        
-        SecureURI.class_eval("@@hasher").should == "HasherSub"
+      end
+
+      after(:all) do
+        # "Naughty naughty", said the Class to the spec
+        # "Neccessary evil", replied the spec.
+        SecureURI.__send__(:hasher=, @original_hasher)
+      end
+
+      it "should set hasher when subclassed" do
+        SecureURI.hasher.should == HasherSub
+      end
+
+      it "should raise an error when hash method isn't overridden" do
+        lambda {
+          SecureURI::Hasher.hash "string"
+        }.should raise_error("hash method needs to be overridden")
+      end
+      
+      it "should raise an error when compare method isn't overridden" do
+        lambda {
+          SecureURI::Hasher.compare "string", "hash"
+        }.should raise_error("hash method needs to be overridden")
       end
     end
   end
